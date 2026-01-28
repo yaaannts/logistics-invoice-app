@@ -3,9 +3,14 @@ logistics-invoice-app
 1. Install Dependencies
 bashDownloadCopy codenpm install
 
-2. 
+Install Dependencies
+bash
+npm install
+
 Start the Server
-bashDownloadCopy codenpm start
+bash
+npm start
+
 The app will be available at http://localhost:3000.
 
 
