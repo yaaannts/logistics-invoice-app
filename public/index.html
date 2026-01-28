@@ -184,8 +184,15 @@
             <div class="invoice-meta">
                 <h1>INVOICE</h1>
                 <div class="meta-grid">
-                    <span class="meta-label">Invoice #</span>
-                    <input type="text" class="meta-input" value="INV-SHIP-2026-88">
+            <!-- ... Inside the .invoice-meta div ... -->
+<div class="meta-grid">
+    <span class="meta-label">Invoice #</span>
+    <!-- Added 'readonly' attribute and ID 'invNum' -->
+    <input type="text" id="invNum" class="meta-input" readonly placeholder="Generating...">
+    <span class="meta-label">Date</span>
+    <input type="date" id="invDate" class="meta-input">
+    <!-- ... -->
+</div>
                     <span class="meta-label">Date</span>
                     <input type="date" class="meta-input" id="invoiceDate">
                     <span class="meta-label">Due Date</span>
