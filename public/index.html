@@ -4,18 +4,167 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ProInvoice | Logistics & Container Invoice Maker</title>
-    <link rel="stylesheet" href="style.css">
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1e40af;
+            --secondary: #64748b;
+            --bg-body: #f8fafc;
+            --bg-paper: #ffffff;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --danger: #ef4444;
+            --success: #22c55e;
+            --radius: 4px;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        /* --- Toolbar --- */
+        .app-toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: white;
+            padding: 15px 25px;
+            border-radius: var(--radius);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            border: 1px solid var(--border);
+        }
+
+        .brand { font-weight: 800; font-size: 1.2rem; color: var(--primary-dark); display: flex; align-items: center; gap: 10px; }
+        .brand span { color: var(--text-muted); font-weight: 400; font-size: 0.9rem; }
+
+        .actions { display: flex; gap: 10px; }
+        
+        .btn {
+            padding: 8px 16px; border: 1px solid var(--border); background: white; border-radius: var(--radius);
+            cursor: pointer; font-size: 0.9rem; font-weight: 500; color: var(--text-main);
+            transition: all 0.2s; display: flex; align-items: center; gap: 6px;
+        }
+        .btn:hover { background: #f1f5f9; border-color: #cbd5e1; }
+        .btn-primary { background: var(--primary); color: white; border-color: var(--primary); }
+        .btn-primary:hover { background: var(--primary-dark); border-color: var(--primary-dark); }
+
+        /* --- Invoice Paper --- */
+        .invoice-paper {
+            background: var(--bg-paper);
+            max-width: 850px;
+            margin: 0 auto;
+            padding: 40px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            border-radius: var(--radius);
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* --- Sections --- */
+        .header-sec { display: flex; justify-content: space-between; margin-bottom: 40px; }
+        .logo-placeholder { width: 150px; height: 50px; background: #f1f5f9; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-weight: bold; color: var(--text-muted); border: 2px dashed var(--border); }
+        
+        .invoice-meta { text-align: right; }
+        .invoice-meta h1 { margin: 0; font-size: 2.5rem; color: var(--primary); text-transform: uppercase; letter-spacing: 2px; }
+        .meta-grid { display: grid; grid-template-columns: auto auto; gap: 5px 15px; margin-top: 10px; text-align: right; }
+        .meta-label { color: var(--text-muted); font-size: 0.85rem; }
+        .meta-input { border: none; background: transparent; text-align: right; font-size: 0.9rem; color: var(--text-main); font-weight: 500; width: 120px; padding: 2px; }
+        .meta-input:focus { border-bottom: 1px solid var(--primary); width: 100%; }
+
+        .addresses { display: flex; justify-content: space-between; margin-bottom: 40px; gap: 40px; }
+        .addr-col { flex: 1; }
+        .addr-title { font-size: 0.85rem; text-transform: uppercase; color: var(--text-muted); font-weight: 700; margin-bottom: 10px; letter-spacing: 0.5px; }
+        .editable-field { 
+            width: 100%; border: 1px solid transparent; padding: 4px; font-family: inherit; font-size: 0.95rem; resize: none; background: transparent;
+        }
+        .editable-field:hover { border-color: #e2e8f0; background: #f8fafc; }
+        .editable-field:focus { border-color: var(--primary); background: #fff; outline: none; }
+
+        /* --- Items Table --- */
+        .items-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+        .items-table th { 
+            text-align: left; padding: 12px 8px; border-bottom: 2px solid var(--text-main); font-size: 0.85rem; text-transform: uppercase; color: var(--text-muted);
+        }
+        .items-table td { padding: 8px; border-bottom: 1px solid var(--border); vertical-align: top; }
+        
+        .col-type { width: 40%; }
+        .col-qty { width: 20%; }
+        .col-rate { width: 20%; }
+        .col-total { width: 15%; text-align: right; }
+        .col-action { width: 5%; text-align: center; }
+
+        .input-bare { width: 100%; border: none; padding: 8px 0; background: transparent; font-size: 0.95rem; }
+        .input-bare:focus { background: white; border: 1px solid var(--primary); padding: 8px; }
+        .input-right { text-align: right; }
+        .input-center { text-align: center; }
+
+        .btn-remove { 
+            color: #cbd5e1; background: none; border: none; cursor: pointer; font-size: 1.2rem; padding: 0 8px;
+        }
+        .btn-remove:hover { color: var(--danger); }
+
+        .add-row-btn { 
+            width: 100%; padding: 12px; border: 2px dashed var(--border); background: transparent; color: var(--text-muted); 
+            cursor: pointer; border-radius: var(--radius); transition: all 0.2s; font-weight: 600;
+        }
+        .add-row-btn:hover { border-color: var(--primary); color: var(--primary); background: #eff6ff; }
+
+        /* --- Footer / Totals / Details --- */
+        .invoice-footer { margin-top: 30px; display: flex; flex-direction: column; gap: 30px; }
+        
+        .top-footer { display: flex; justify-content: space-between; }
+        
+        .notes-area { width: 45%; }
+        .totals-area { width: 45%; }
+
+        .totals-row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 0.9rem; }
+        .totals-row.grand-total { font-size: 1.2rem; font-weight: 700; color: var(--primary); border-top: 2px solid var(--text-main); padding-top: 10px; margin-top: 10px; }
+        
+        .currency-input { text-align: right; border: none; background: transparent; font-weight: 500; width: 80px; }
+        .currency-input:focus { border-bottom: 1px solid var(--primary); outline: none; }
+
+        /* --- Bottom Details Section --- */
+        .bottom-details {
+            margin-top: auto;
+            padding-top: 30px;
+            border-top: 1px solid var(--border);
+        }
+        
+        .detail-label { font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700; margin-bottom: 5px; }
+
+        .status-bar { margin-top: 20px; padding: 10px; background: #1e293b; color: #10b981; font-family: monospace; font-size: 0.8rem; border-radius: var(--radius); display: none; }
+
+        @media print {
+            body { background: white; padding: 0; margin: 0; -webkit-print-color-adjust: exact; }
+            .app-toolbar, .add-row-btn, .btn-remove, .status-bar { display: none !important; }
+            .invoice-paper { box-shadow: none; margin: 0; padding: 0; max-width: 100%; border: none; border-radius: 0; }
+            .editable-field, .meta-input, .input-bare { border: none !important; padding: 0 !important; resize: none; background: transparent !important; }
+            .items-table th { border-bottom: 2px solid #000; }
+            .invoice-footer { border-top: 2px solid #e2e8f0; }
+        }
+    </style>
 </head>
 <body>
 
-    <!-- App Toolbar -->
+    <!-- App Controller -->
     <div class="app-toolbar">
         <div class="brand">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
-            Logistics Invoice <span>| v1.0</span>
+            Container Invoice <span>| Interactive Maker</span>
         </div>
         <div class="actions">
-            <button class="btn" onclick="app.toggleSidebar()">📂 My Invoices</button>
             <button class="btn" onclick="app.resetInvoice()">Clear / New</button>
             <button class="btn btn-primary" onclick="window.print()">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
@@ -24,105 +173,187 @@
         </div>
     </div>
 
-    <div class="main-container">
-        <!-- Saved Invoices Sidebar -->
-        <div class="sidebar" id="invoiceSidebar">
-            <div class="sidebar-header">
-                <h3>Saved Invoices</h3>
-                <button class="close-btn" onclick="app.toggleSidebar()">&times;</button>
+    <!-- Main Invoice View -->
+    <div class="invoice-paper" id="invoice">
+        <!-- Header -->
+        <div class="header-sec">
+            <div class="logo-area">
+                <textarea class="editable-field" rows="2" placeholder="Your Company Name&#10;123 Business Rd.">Global Logistics Ltd.</textarea>
+                <textarea class="editable-field" style="margin-top:5px; color:var(--text-muted);" rows="2" placeholder="Address Line 1&#10;City, Zip, Country">Port Authority Building&#10;Malé, Maldives</textarea>
             </div>
-            <div id="invoiceList" class="invoice-list">
-                <p>Loading...</p>
+            <div class="invoice-meta">
+                <h1>INVOICE</h1>
+                <div class="meta-grid">
+                    <span class="meta-label">Invoice #</span>
+                    <input type="text" class="meta-input" value="INV-SHIP-2026-88">
+                    <span class="meta-label">Date</span>
+                    <input type="date" class="meta-input" id="invoiceDate">
+                    <span class="meta-label">Due Date</span>
+                    <input type="date" class="meta-input" id="dueDate">
+                </div>
             </div>
         </div>
 
-        <!-- Main Invoice View -->
-        <div class="invoice-paper" id="invoice">
-            <!-- Status Area -->
-            <div id="saveArea" style="text-align: right; margin-bottom: 15px;">
-                <button class="btn btn-success" id="saveBtn" onclick="app.saveInvoice()">💾 Save Invoice</button>
+        <!-- Addresses -->
+        <div class="addresses">
+            <div class="addr-col">
+                <div class="addr-title">Bill To</div>
+                <textarea class="editable-field" rows="3" placeholder="Client Name&#10;Company Name&#10;Address">Ocean Trading Co&#10;Attn: Captain Price&#10;456 Docklands, Malé</textarea>
             </div>
-            <div id="statusMessage" class="status-bar"></div>
+            <div class="addr-col">
+                <div class="addr-title">Delivered Godown</div>
+                <textarea class="editable-field" rows="3" placeholder="Godown Name / Location&#10;Building / Zone&#10;Zip, Country">Thilafushi Industrial Zone&#10;Zone B, Unit 12&#10;Malé</textarea>
+            </div>
+        </div>
 
-            <!-- Header -->
-            <div class="header-sec">
-                <div class="logo-area">
-                    <textarea id="cName" class="editable-field" rows="2">Global Logistics Ltd.</textarea>
-                    <textarea id="cAddr" class="editable-field" rows="2">Port Authority Building&#10;Malé, Maldives</textarea>
+        <!-- Line Items (Containers) -->
+        <table class="items-table">
+            <thead>
+                <tr>
+                    <th class="col-type">Container Type</th>
+                    <th class="col-qty">No. of Containers</th>
+                    <th class="col-rate">Unit Price</th>
+                    <th class="col-total">Total Price</th>
+                    <th class="col-action"></th>
+                </tr>
+            </thead>
+            <tbody id="itemsBody">
+                <!-- Rows injected via JS -->
+            </tbody>
+        </table>
+        
+        <button class="add-row-btn" onclick="app.addRow()">+ Add Container Item</button>
+
+        <!-- Footer / Totals / Details -->
+        <div class="invoice-footer">
+            
+            <!-- Top: Notes and Math -->
+            <div class="top-footer">
+                <div class="notes-area">
+                    <div class="addr-title">Notes / Terms</div>
+                    <textarea class="editable-field" rows="3" placeholder="Payment terms, gate pass info, etc."></textarea>
                 </div>
-                <div class="invoice-meta">
-                    <h1>INVOICE</h1>
-                    <div class="meta-grid">
-                        <span class="meta-label">Invoice #</span>
-                        <input type="text" id="invNum" class="meta-input" value="INV-2026-001">
-                        <span class="meta-label">Date</span>
-                        <input type="date" id="invDate" class="meta-input">
-                        <span class="meta-label">Due Date</span>
-                        <input type="date" id="invDue" class="meta-input">
+                <div class="totals-area">
+                    <div class="totals-row">
+                        <span>Subtotal</span>
+                        <span id="subtotalDisplay">MVR 0.00</span>
+                    </div>
+                    <!-- Tax removed as requested previously -->
+                    <div class="totals-row">
+                        <span>Discount (MVR) <input type="number" class="currency-input" id="discountVal" value="0" min="0" step="1" onchange="app.calculateTotals()"></span>
+                        <span id="discountDisplay">-MVR 0.00</span>
+                    </div>
+                    <div class="totals-row grand-total">
+                        <span>Total Invoice Value</span>
+                        <span id="grandTotalDisplay">MVR 0.00</span>
                     </div>
                 </div>
             </div>
 
-            <!-- Addresses -->
-            <div class="addresses">
-                <div class="addr-col">
-                    <div class="addr-title">Bill To</div>
-                    <textarea id="billTo" class="editable-field" rows="3">Ocean Trading Co&#10;Attn: Captain Price</textarea>
-                </div>
-                <div class="addr-col">
-                    <div class="addr-title">Delivered Godown</div>
-                    <textarea id="deliverTo" class="editable-field" rows="3">Thilafushi Industrial Zone&#10;Zone B, Unit 12</textarea>
-                </div>
+            <!-- Bottom: Only Bank details now -->
+            <div class="bottom-details">
+                <div class="addr-title">Sending Bank Account Details</div>
+                <textarea class="editable-field" rows="4" placeholder="Bank Name, Account Number, Swift Code, IBAN, etc." style="font-size: 0.9rem;">Bank of Maldives&#10;Acct: 9876543210&#10;SWIFT: BMDVMV MV&#10;Routing: 021000021</textarea>
             </div>
 
-            <!-- Line Items -->
-            <table class="items-table">
-                <thead>
-                    <tr>
-                        <th class="col-type">Container Type</th>
-                        <th class="col-qty">No. of Containers</th>
-                        <th class="col-rate">Unit Price (MVR)</th>
-                        <th class="col-total">Total Price</th>
-                        <th class="col-action"></th>
-                    </tr>
-                </thead>
-                <tbody id="itemsBody">
-                    <!-- Dynamic Rows -->
-                </tbody>
-            </table>
-            <button class="add-row-btn" onclick="app.addRow()">+ Add Container Item</button>
-
-            <!-- Footer / Details -->
-            <div class="invoice-footer">
-                <div class="top-footer">
-                    <div class="notes-area">
-                        <div class="addr-title">Notes / Terms</div>
-                        <textarea id="notes" class="editable-field" rows="3"></textarea>
-                    </div>
-                    <div class="totals-area">
-                        <div class="totals-row">
-                            <span>Subtotal</span>
-                            <span id="subtotalDisplay">MVR 0.00</span>
-                        </div>
-                        <div class="totals-row">
-                            <span>Discount (MVR) <input type="number" id="discountVal" value="0" min="0" step="1" oninput="app.calculateTotals()"></span>
-                            <span id="discountDisplay">-MVR 0.00</span>
-                        </div>
-                        <div class="totals-row grand-total">
-                            <span>Total Invoice Value</span>
-                            <span id="grandTotalDisplay">MVR 0.00</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="bottom-details">
-                    <div class="addr-title">Sending Bank Account Details</div>
-                    <textarea id="bankDetails" class="editable-field" rows="4">Bank of Maldives&#10;Acct: 9876543210&#10;SWIFT: BMDVMV MV</textarea>
-                </div>
-            </div>
         </div>
     </div>
 
-    <script src="app.js"></script>
+    <div class="status-bar" id="statusBar">Ready...</div>
+
+    <script>
+        const app = {
+            // Currency set to MVR
+            currencyFormatter: new Intl.NumberFormat('en-MV', { style: 'currency', currency: 'MVR' }),
+            
+            init: function() {
+                // Dates
+                const today = new Date();
+                document.getElementById('invoiceDate').valueAsDate = today;
+                const due = new Date();
+                due.setDate(today.getDate() + 30);
+                document.getElementById('dueDate').valueAsDate = due;
+
+                // Add Default Container Rows (MVR Prices)
+                this.addRow('20ft Standard Container (Dry)', 5, 25000.00);
+                this.addRow('40ft High Cube Refrigerated', 2, 55000.00);
+
+                this.calculateTotals();
+            },
+
+            addRow: function(type = '', qty = 1, rate = 0) {
+                const tbody = document.getElementById('itemsBody');
+                const tr = document.createElement('tr');
+                
+                tr.innerHTML = `
+                    <td><input type="text" class="input-bare item-type" value="${type}" placeholder="e.g. 20ft Standard"></td>
+                    <td><input type="number" class="input-bare input-center item-qty" value="${qty}" min="1" oninput="app.calculateRowTotal(this)"></td>
+                    <td><input type="number" class="input-bare input-right item-rate" value="${rate}" min="0" step="0.01" oninput="app.calculateRowTotal(this)"></td>
+                    <td class="col-total"><span class="row-total">${this.currencyFormatter.format(qty * rate)}</span></td>
+                    <td class="col-action"><button class="btn-remove" onclick="app.removeRow(this)" title="Remove Item">&times;</button></td>
+                `;
+                
+                tbody.appendChild(tr);
+            },
+
+            removeRow: function(btn) {
+                const row = btn.closest('tr');
+                if (document.querySelectorAll('#itemsBody tr').length > 1) {
+                    row.remove();
+                    this.calculateTotals();
+                } else {
+                    row.querySelector('.item-type').value = '';
+                    row.querySelector('.item-qty').value = 1;
+                    row.querySelector('.item-rate').value = 0;
+                    this.calculateRowTotal(row.querySelector('.item-qty'));
+                }
+            },
+
+            calculateRowTotal: function(input) {
+                const row = input.closest('tr');
+                const qty = parseFloat(row.querySelector('.item-qty').value) || 0;
+                const rate = parseFloat(row.querySelector('.item-rate').value) || 0;
+                const total = qty * rate;
+                
+                row.querySelector('.row-total').textContent = this.currencyFormatter.format(total);
+                this.calculateTotals();
+            },
+
+            calculateTotals: function() {
+                const rows = document.querySelectorAll('#itemsBody tr');
+                let subtotal = 0;
+
+                rows.forEach(row => {
+                    const qty = parseFloat(row.querySelector('.item-qty').value) || 0;
+                    const rate = parseFloat(row.querySelector('.item-rate').value) || 0;
+                    subtotal += (qty * rate);
+                });
+
+                const discountVal = parseFloat(document.getElementById('discountVal').value) || 0;
+
+                const grandTotal = subtotal - discountVal;
+
+                document.getElementById('subtotalDisplay').textContent = this.currencyFormatter.format(subtotal);
+                document.getElementById('discountDisplay').textContent = `-${this.currencyFormatter.format(discountVal)}`;
+                document.getElementById('grandTotalDisplay').textContent = this.currencyFormatter.format(Math.max(0, grandTotal));
+            },
+
+            resetInvoice: function() {
+                if(confirm('Clear all data?')) {
+                    const tbody = document.getElementById('itemsBody');
+                    tbody.innerHTML = '';
+                    this.addRow();
+                    document.querySelector('.logo-area textarea').value = '';
+                    document.querySelectorAll('.editable-field').forEach(el => el.value = '');
+                    document.getElementById('discountVal').value = 0;
+                    this.calculateTotals();
+                }
+            }
+        };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            app.init();
+        });
+    </script>
 </body>
 </html>
