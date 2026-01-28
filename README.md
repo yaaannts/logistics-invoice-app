@@ -1,7 +1,5 @@
 # logistics-invoice-app
 logistics-invoice-app
-1. Install Dependencies
-bashDownloadCopy codenpm install
 
 Install Dependencies
 bash
